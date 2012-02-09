@@ -364,7 +364,7 @@ static u16 s5h1411_readreg(struct s5h1411_state *state, u8 addr, u8 reg)
 
 	struct i2c_msg msg[] = {
 		{ .addr = addr, .flags = 0, .buf = b0, .len = 1 },
-		{ .addr = addr, .flags = I2C_M_RD, .buf = b1, .len = 2 } };
+		{ .addr = addr, .flags = I2C_M_RD, .buf = b1, .len = 3 } };
 
 	ret = i2c_transfer(state->i2c, msg, 2);
 
