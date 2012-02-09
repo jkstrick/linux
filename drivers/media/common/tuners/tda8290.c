@@ -256,35 +256,37 @@ static void tda8290_set_params(struct dvb_frontend *fe,
 		}
 	}
 	/* adjust headroom resp. gain */
-	if ((agc_stat > 115) || (!(pll_stat & 0x80) && (adc_sat < 20))) {
-		tuner_dbg("adjust gain, step 1. Agc: %d, ADC stat: %d, lock: %d\n",
-			   agc_stat, adc_sat, pll_stat & 0x80);
-		tuner_i2c_xfer_send(&priv->i2c_props, gainset_2, 2);
-		msleep(100);
-		tuner_i2c_xfer_send_recv(&priv->i2c_props,
-					 &addr_agc_stat, 1, &agc_stat, 1);
-		tuner_i2c_xfer_send_recv(&priv->i2c_props,
-					 &addr_pll_stat, 1, &pll_stat, 1);
-		if ((agc_stat > 115) || !(pll_stat & 0x80)) {
-			tuner_dbg("adjust gain, step 2. Agc: %d, lock: %d\n",
-				   agc_stat, pll_stat & 0x80);
-			if (priv->cfg.agcf)
-				priv->cfg.agcf(fe);
+	if (params->mode != V4L2_TUNER_RADIO) {
+		if ((agc_stat > 115) || (!(pll_stat & 0x80) && (adc_sat < 20))) {
+			tuner_dbg("adjust gain, step 1. Agc: %d, ADC stat: %d, lock: %d\n",
+				   agc_stat, adc_sat, pll_stat & 0x80);
+			tuner_i2c_xfer_send(&priv->i2c_props, gainset_2, 2);
 			msleep(100);
 			tuner_i2c_xfer_send_recv(&priv->i2c_props,
-						 &addr_agc_stat, 1,
-						 &agc_stat, 1);
+						 &addr_agc_stat, 1, &agc_stat, 1);
 			tuner_i2c_xfer_send_recv(&priv->i2c_props,
-						 &addr_pll_stat, 1,
-						 &pll_stat, 1);
-			if((agc_stat > 115) || !(pll_stat & 0x80)) {
-				tuner_dbg("adjust gain, step 3. Agc: %d\n", agc_stat);
-				tuner_i2c_xfer_send(&priv->i2c_props, adc_head_12, 2);
-				tuner_i2c_xfer_send(&priv->i2c_props, pll_bw_low, 2);
+						 &addr_pll_stat, 1, &pll_stat, 1);
+			if ((agc_stat > 115) || !(pll_stat & 0x80)) {
+				tuner_dbg("adjust gain, step 2. Agc: %d, lock: %d\n",
+					   agc_stat, pll_stat & 0x80);
+				if (priv->cfg.agcf)
+					priv->cfg.agcf(fe);
 				msleep(100);
+				tuner_i2c_xfer_send_recv(&priv->i2c_props,
+							 &addr_agc_stat, 1,
+							 &agc_stat, 1);
+				tuner_i2c_xfer_send_recv(&priv->i2c_props,
+							 &addr_pll_stat, 1,
+							 &pll_stat, 1);
+				if((agc_stat > 115) || !(pll_stat & 0x80)) {
+					tuner_dbg("adjust gain, step 3. Agc: %d\n", agc_stat);
+					tuner_i2c_xfer_send(&priv->i2c_props, adc_head_12, 2);
+					tuner_i2c_xfer_send(&priv->i2c_props, pll_bw_low, 2);
+					msleep(100);
+				}
 			}
 		}
-	}
+	} /* !V4L2_TUNER_RADIO */
 
 	/* l/ l' deadlock? */
 	if(priv->tda8290_easy_mode & 0x60) {
